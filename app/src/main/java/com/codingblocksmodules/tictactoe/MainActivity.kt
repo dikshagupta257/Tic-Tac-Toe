@@ -1,10 +1,7 @@
 package com.codingblocksmodules.tictactoe
 
-import android.content.Intent
-import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import androidx.core.content.ContextCompat
@@ -12,12 +9,12 @@ import com.codingblocksmodules.tictactoe.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var binding : ActivityMainBinding
-    lateinit var board : Array<Array<Button>>
-    var player = true
-    var turn_count = 0
-    var boardStatus = Array(3){IntArray(3)}
-    var name1 : String? = "X"
-    var name2:String? = "0"
+    private lateinit var board : Array<Array<Button>>
+    private var player = true
+    private var turnCount = 0
+    private var boardStatus = Array(3){IntArray(3)}
+    private var name1 : String? = "X"
+    private var name2:String? = "0"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,25 +22,24 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val root = binding.root
         setContentView(root)
 
-        val i: Intent = getIntent()
-        name1 = i.getStringExtra("Name1")
-        name2 = i.getStringExtra("Name2")
-
-
-        Log.d("TAG", "in MainActivity onCreate: $name1 and $name2")
+        name1 = intent.getStringExtra("Name1")
+        name2 = intent.getStringExtra("Name2")
 
         binding.apply{
+            //initializing board of buttons once this activity is created
             board = arrayOf(arrayOf(button1 , button2 , button3),
                             arrayOf(button4 , button5 , button6),
                             arrayOf(button7 , button8 , button9))
 
+            //resetting every parameter and re-initializing the board if reset button is clicked
             resetBtn.setOnClickListener {
-                turn_count = 0
+                turnCount = 0
                 player = true
                 initialiseBoardStatus()
             }
         }
 
+        //to handle click if any button in "board" matrix is clicked
         for(row in board){
             for(button in row){
                 button.setOnClickListener(this)
@@ -54,11 +50,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     }
 
+    /**handle clicks according to the button on "board" clicked and then updating other parameters:-
+     * changing the state of player variable i.e true to false or false to true
+     * incrementing the turn count by 1 to keep track of no of moves played up till now
+       */
     override fun onClick(v: View) {
         when(v.id){
             R.id.button1->{
                 updateBoard(row = 0 , col = 0 , player = player)
-                //binding.button1.setBackgroundColor(R.color.)
             }
             R.id.button2->{
                 updateBoard(row = 0 , col = 1 , player = player)
@@ -86,20 +85,27 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
         }
         player = !(player)
-        turn_count++
+        turnCount++
+
+        /** if player value is true i.e., player 1 then update the activity display heading by his name,
+           else update it with other player's name*/
         if(player){
             updateDisplay("Player $name1 turn" , R.color.green)
         }else{
             updateDisplay("Player $name2 turn" , R.color.yellow)
         }
-        if(turn_count == 9){
+
+        //it total turn count becomes 9 that means nobody won and game is draw
+        if(turnCount == 9){
             updateDisplay("Game Draw" , R.color.black)
         }
 
+        //check winner each time a button on the board is pressed
         checkWinner()
 
     }
 
+    //to check the winner with the help of "boardStatus" matrix
     private fun checkWinner() {
         //horizontal rows
         for(i in 0..2){
@@ -153,16 +159,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     }
 
-    private fun disableButton(){
-        for(row in board){
-            for(button in row){
-                button.isEnabled = false
-            }
-        }
-    }
-
+    /**initializing the board by setting the display to default one, setting all the values on "boardStatus"
+       back to -1 and enabling all the buttons on the board along with their text set as empty
+       and background color as default one*/
     private fun initialiseBoardStatus() {
-        binding.displayTv.text = "Tic-Tac-Toe"
+        binding.displayTv.text = getString(R.string.application_name)
+        binding.displayTv.setTextColor(ContextCompat.getColor(this, R.color.black))
         for(i in 0..2){
             for(j in 0..2){
                 boardStatus[i][j] = -1
@@ -173,11 +175,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             for(button in row){
                 button.isEnabled = true
                 button.text =""
-                button.setBackgroundColor(resources.getColor(R.color.grey))
+                button.setBackgroundColor(ContextCompat.getColor(this, R.color.grey))
             }
         }
     }
 
+    //to set the text above the board in order to update the user about the game's status
     private fun updateDisplay(displayText: String , color: Int) {
         binding.displayTv.text = displayText
         binding.displayTv.setTextColor(ContextCompat.getColor(this, color))
@@ -186,10 +189,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    //disable button once it has been clicked while the game is being played
+    private fun disableButton(){
+        for(row in board){
+            for(button in row){
+                button.isEnabled = false
+            }
+        }
+    }
+
+    //update the appearance and boardStatus according to which user has clicked which button
     private fun updateBoard(row: Int, col: Int, player: Boolean) {
-        var text  = if (player)  "X" else "0"
-        var value  = if(player) 1 else 0
-        var color = if(player) resources.getColor(R.color.green) else resources.getColor(R.color.yellow)
+        val text  = if (player)  "X" else "0"
+        val value  = if(player) 1 else 0
+        val color = if(player) ContextCompat.getColor(this, R.color.green) else ContextCompat.getColor(this, R.color.yellow)
         board[row][col].apply {
             isEnabled = false
             setText(text)
